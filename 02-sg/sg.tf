@@ -29,6 +29,26 @@ module "frontend" {
     common_tags = var.common_tags
 } 
 
+module "bastion" {
+    source = "git::https://github.com/JDdaws78s/terraform-aws-sg-module.git"
+    project_name = var.project_name
+    environment = var.environment
+    sg_name = "bastion"
+    sg_description = "SG for bastion instance"
+    vpc_id = data.aws_ssm_parameter.vpc_id.value
+    common_tags = var.common_tags
+} 
+
+module "ansible" {
+    source = "git::https://github.com/JDdaws78s/terraform-aws-sg-module.git"
+    project_name = var.project_name
+    environment = var.environment
+    sg_name = "ansible"
+    sg_description = "SG for ansible instances"
+    vpc_id = data.aws_ssm_parameter.vpc_id.value
+    common_tags = var.common_tags
+} 
+
 #db is accepting traffic from backend
 resource "aws_security_group_rule" "db_backend" {
   type              = "ingress"
@@ -55,4 +75,67 @@ resource "aws_security_group_rule" "frontend_public" {
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = module.frontend.sg_id
+}
+
+resource "aws_security_group_rule" "db_bastion" {
+  type              = "ingress"
+  from_port         = 3306
+  to_port           = 3306
+  protocol          = "tcp"
+  source_security_group_id = module.bastion.sg_id   # where you are getting traffic from
+  security_group_id = module.db.sg_id
+}
+
+resource "aws_security_group_rule" "backend_bastion" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  source_security_group_id = module.bastion.sg_id
+  security_group_id = module.backend.sg_id
+}
+
+resource "aws_security_group_rule" "backend_ansible" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  source_security_group_id = module.ansible.sg_id
+  security_group_id = module.backend.sg_id
+}
+
+resource "aws_security_group_rule" "frontend_ansible" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  source_security_group_id = module.ansbile.sg_id
+  security_group_id = module.frontend.sg_id
+}
+
+resource "aws_security_group_rule" "frontend_bastion" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  source_security_group_id = module.bastion.sg_id
+  security_group_id = module.frontend.sg_id
+}
+
+resource "aws_security_group_rule" "bastion_public" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = module.bastion.sg_id
+}
+
+resource "aws_security_group_rule" "ansible_public" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = module.ansible.sg_id
 }
