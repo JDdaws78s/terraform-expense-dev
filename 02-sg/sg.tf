@@ -109,7 +109,7 @@ resource "aws_security_group_rule" "frontend_ansible" {
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  source_security_group_id = module.ansbile.sg_id
+  source_security_group_id = module.ansible.sg_id
   security_group_id = module.frontend.sg_id
 }
 

@@ -1,12 +1,12 @@
-module "ec2_instance" {
+module "backend" {
   source  = "terraform-aws-modules/ec2-instance/aws"
 
   name = "${var.project_name}-${var.environment}-backend"
 
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [data.aws_ssm_parameter.private_sg_id.value]
+  vpc_security_group_ids = [data.aws_ssm_parameter.backend_sg_id.value]
   subnet_id              = local.private_subnet_id
-  ami                    = data.aws_ami.ami
+  ami                    = data.aws_ami.ami.id
 
   tags = merge(
     var.common_tags,
@@ -16,15 +16,15 @@ module "ec2_instance" {
   )
 }
 
-module "ec2_instance" {
+module "frontend" {
   source  = "terraform-aws-modules/ec2-instance/aws"
 
   name = "${var.project_name}-${var.environment}-frontend"
 
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [data.aws_ssm_parameter.public_sg_id.value]
+  vpc_security_group_ids = [data.aws_ssm_parameter.frontend_sg_id.value]
   subnet_id              = local.public_subnet_id
-  ami                    = data.aws_ami.ami
+  ami                    = data.aws_ami.ami.id
 
   tags = merge(
     var.common_tags,
